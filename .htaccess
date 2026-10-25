@@ -39,6 +39,30 @@
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
+  # `/api/...` MUST NOT be answered with the app shell, and this guard was missing from the
+  # first version of this file. The cost was measured rather than imagined.
+  #
+  # This origin has no API. The app calls https://www.ansartechnologies.my absolutely, so
+  # nothing here should ever resolve a path under /api/. But a client running an OLDER bundle
+  # still asks THIS host, because that is what the older bundle was built to do — and a service
+  # worker can keep a bundle alive long after the files on disk have changed.
+  #
+  # Without this condition the fallback answered that request with index.html and a 200. The
+  # client then reported "the server answered 200 with something other than JSON", because
+  # src/lib/api.ts reports the status it actually received. A 404 is a readable answer and names
+  # the real problem. A 200 carrying HTML is a riddle, and it cost a round trip with the user to
+  # work out that the deployment was fine and the browser was serving yesterday's JavaScript.
+  #
+  # Expressed as a NEGATIVE CONDITION rather than `[R=404]` on purpose: the path simply is not
+  # rewritten, so it falls through to the web server's own 404. That depends on nothing beyond
+  # rewrite conditions, which matters on LiteSpeed, where the semantics of `R` with a non-3xx
+  # code are not worth betting a deployment on.
+  #
+  # vite.config.ts carries the same guard for the service worker — `navigateFallbackDenylist:
+  # [/^\/api\//]` — and its comment records the same reasoning. The guard existed in the client
+  # and was forgotten in the server config, which is how the server produced the exact failure
+  # the client had already been taught to avoid.
+  RewriteCond %{REQUEST_URI} !^/api(/|$)
   RewriteRule ^ index.html [L]
 </IfModule>
 
