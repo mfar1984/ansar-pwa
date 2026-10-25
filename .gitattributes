@@ -1,0 +1,3 @@
+# This folder is a deployment. Files must arrive byte for byte: a rewritten line ending in
+# a precached asset is a hash mismatch the service worker reports as a failed install.
+* -text

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--
+      `viewport-fit=cover` plus the `env(safe-area-inset-*)` padding in base.css is what keeps the
+      bottom tab bar clear of the iPhone home indicator. `maximum-scale` is deliberately NOT set:
+      pinning zoom on a staff tool takes accessibility away from the people who need it most.
+    -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="description" content="Work orders and self service for Ansar Technologies staff." />
+    <!-- iOS still reads this one; it is what gives an added-to-home-screen app no browser chrome. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Ansar" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon-180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <title>Ansar Staff</title>
+    <script type="module" crossorigin src="/assets/index-DSWzWo2G.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B2-NSZJr.css">
+  <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
+  <body>
+    <!--
+      `vite-plugin-pwa` injects the manifest link and the service-worker registration script here
+      at build time (`injectRegister: 'auto'`). They are deliberately not hand-written: two
+      declarations of one manifest is how a renamed file stops being served.
+    -->
+    <div id="root"></div>
+  </body>
+</html>
