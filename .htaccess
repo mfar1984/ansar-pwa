@@ -1,0 +1,124 @@
+# Ansar Staff Portal (PWA) — Apache/LiteSpeed config for staff.ansartechnologies.my
+#
+# This is a prebuilt static single-page app. There is no Node process here and no Passenger
+# block on purpose: cPanel serves these files directly off the subdomain's docroot.
+#
+# There is deliberately NO proxy of /api to the API host either. It is not available on this
+# server: LiteSpeed only honours a proxy rewrite to a DOMAIN NAME when a WebAdmin-defined
+# External App exists, and the form that needs no External App is 127.0.0.1:<port>. Nothing
+# answers on TCP here, because Passenger intercepts the Node server's listen() and binds a Unix
+# socket. So the app calls https://www.ansartechnologies.my directly and the API host carries
+# the CORS headers — see the README in ansar-pwa.
+#
+# Copied verbatim into ansar-pwa-production/ by scripts/package-production.cjs. Edit it HERE;
+# the packager empties that folder on every run, so a copy edited there disappears.
+
+# ── HTTPS only ────────────────────────────────────────────────────────────────
+# Functional, not hygiene: a service worker will not register over plain HTTP, so without this
+# the app installs nothing, caches nothing and never updates itself. Secure contexts are a
+# browser requirement, not a preference.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ── SPA fallback ──────────────────────────────────────────────────────────────
+# INSURANCE, not the routing mechanism. Phase 0 routes on the URL FRAGMENT — `#/work-orders/12`,
+# see src/lib/router.ts — and a fragment is never sent to the server, so every request this host
+# sees is for `/` or for a real file. This block is here for the cold load of a path that does
+# not exist yet: a later phase that moves to path routing, a stale link, a typed URL.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Never rewrite something that is on disk. Without this guard an asset, an icon, the manifest
+  # or sw.js would be answered with index.html, and a service worker served as HTML fails to
+  # register with nothing on screen to say why.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# ── Caching ───────────────────────────────────────────────────────────────────
+# THE MOST IMPORTANT BLOCK IN THIS FILE. scripts/package-production.cjs prints this requirement
+# at the end of every run for a reason: without it a deploy succeeds, the files on disk are the
+# new build, and every existing user stays pinned to the old one because their browser never
+# asks again.
+<IfModule mod_headers.c>
+  # Hashed filenames. `assets/index-<hash>.js` changes name whenever its content changes — the
+  # packager verifies every one of them carries a hash — so a year is safe and `immutable` tells
+  # the browser not to revalidate at all.
+  <FilesMatch "\.(js|css|woff2|woff|ttf|otf|eot|svg|png|jpg|jpeg|gif|webp|avif|ico)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # These four are the update mechanism, so they are the four that must never be cached. sw.js
+  # is the file that tells a browser the others changed; a cached sw.js is an app that can never
+  # update itself. The FilesMatch is anchored, so it reaches these names at the root and not the
+  # hashed chunks the rule above has already claimed.
+  <FilesMatch "^(index\.html|sw\.js|registerSW\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # The worker is served from the root and claims the whole origin as its scope. Without this
+  # header a browser restricts a worker to its own directory, and a scope narrower than the
+  # manifest's `/` is an app that stops being installed.
+  <FilesMatch "^sw\.js$">
+    Header set Service-Worker-Allowed "/"
+  </FilesMatch>
+</IfModule>
+
+# ── Security headers ──────────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # GRANTED HONESTLY: Phase 0 uses no geolocation, no camera and no microphone. Attendance with
+  # a geofence and receipt capture are both listed as later phases, and when they ship this line
+  # becomes `geolocation=(self), camera=(self)`. Granting them now would hand two permissions to
+  # a build that has no code to ask for either.
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+  Header always unset X-Powered-By
+</IfModule>
+
+# ── Compression ───────────────────────────────────────────────────────────────
+# The JS chunk is the bulk of the download and it compresses to roughly a third. This app is for
+# a phone on mobile data, which is the case that decides whether the figure matters.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/javascript \
+    application/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/css text/javascript \
+    application/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+
+# ── MIME types ────────────────────────────────────────────────────────────────
+# Served with the wrong type the manifest is ignored outright, so the install prompt never
+# appears and the app is a website with no error anywhere to explain it.
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+</IfModule>
+
+# ── Deny access to repository and deploy metadata ─────────────────────────────
+# This docroot is a git working tree, because the host deploys by pulling it. These files are
+# readable over HTTP by default.
+<FilesMatch "^(\.htaccess|\.gitignore|\.gitattributes)$">
+  Require all denied
+</FilesMatch>
+
+RedirectMatch 404 /\.git
+
+# Static SPA: nothing in this tree is a directory anybody should be able to browse.
+Options -Indexes
