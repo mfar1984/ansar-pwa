@@ -1,0 +1,1 @@
+import{j as s}from"../index-BpNavvJ7.js";function e({title:l,detail:a,action:n}){return s.jsxs("div",{className:"pband",children:[s.jsxs("div",{className:"pband__copy",children:[s.jsx("strong",{className:"pband__title",children:l}),a?s.jsx("span",{className:"pband__detail",children:a}):null]}),n?s.jsx("div",{className:"pband__action",children:n}):null]})}export{e as P};

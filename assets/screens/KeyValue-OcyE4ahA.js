@@ -1,1 +1,0 @@
-import{j as r}from"../index-cPjHTYKO.js";function l({children:e}){return r.jsx("dl",{className:"kv",children:e})}function t({label:e,value:s}){return s==null||typeof s=="string"&&s.trim().length===0?null:r.jsxs("div",{className:"kv__row",children:[r.jsx("dt",{className:"kv__label",children:e}),r.jsx("dd",{className:"kv__value",children:s})]})}export{l as K,t as a};
