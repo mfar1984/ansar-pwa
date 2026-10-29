@@ -1,1 +1,0 @@
-import{j as s}from"../index-CSdZiFLc.js";function n({children:a,aside:e}){return s.jsxs("p",{className:"seclabel",children:[s.jsx("span",{children:a}),e?s.jsx("span",{className:"seclabel__aside",children:e}):null]})}export{n as S};

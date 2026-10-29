@@ -1,1 +1,0 @@
-import{j as s}from"../index-CSdZiFLc.js";function o({label:l,value:t,note:a}){return s.jsxs("div",{className:"total",children:[s.jsxs("div",{className:"total__row",children:[s.jsx("span",{className:"total__label",children:l}),s.jsx("strong",{className:"total__value",children:t})]}),a?s.jsx("p",{className:"total__note",children:a}):null]})}export{o as T};
