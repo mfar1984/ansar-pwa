@@ -1,1 +1,0 @@
-import{j as s}from"../index-BpNavvJ7.js";function c({label:l,children:i}){return s.jsxs("div",{className:"iblock",children:[s.jsx("span",{className:"iblock__label",children:l}),s.jsx("div",{className:"iblock__body",children:i})]})}export{c as I};

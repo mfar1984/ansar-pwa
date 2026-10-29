@@ -1,1 +1,0 @@
-import{j as i}from"../index-BpNavvJ7.js";function e({children:s}){return i.jsx("div",{className:"fieldpair",children:s})}function t({children:s,note:r}){return i.jsxs("div",{className:"submitbar",children:[s,r?i.jsx("p",{className:"submitbar__note",children:r}):null]})}export{e as F,t as S};

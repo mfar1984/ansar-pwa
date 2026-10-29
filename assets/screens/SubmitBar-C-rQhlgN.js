@@ -1,0 +1,1 @@
+import{j as r}from"../index-CSdZiFLc.js";function t({children:a,note:s}){return r.jsxs("div",{className:"submitbar",children:[a,s?r.jsx("p",{className:"submitbar__note",children:s}):null]})}export{t as S};
